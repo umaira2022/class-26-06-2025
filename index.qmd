@@ -1,0 +1,50 @@
+---
+title: "Race and Income"
+author: "Umaira"
+execute: 
+  echo: false
+---
+
+
+```{r}
+#| message: false
+library(tidyverse)
+library(plotly)
+
+x <- read_csv(
+  "https://raw.githubusercontent.com/PPBDS/primer.data/master/data-raw/nyc_tracts.csv",
+  show_col_types = FALSE) |> 
+    separate(tract, 
+             into = c("tract_full", "county", "state"), 
+             sep = "; ", 
+             remove = FALSE) |> 
+    mutate(county = str_trim(county),
+           borough = recode(county,
+                     "New York County" = "Manhattan",
+                     "Kings County" = "Brooklyn",
+                     "Queens County" = "Queens",
+                     "Bronx County" = "Bronx",
+                     "Richmond County" = "Staten Island"))
+```
+
+```{r}
+p <- ggplot(x, aes(
+  x = med_income,
+  y = race,
+  color = med_income,
+  text = tract_full
+)) +
+  geom_point(alpha = 0.8) +
+  scale_x_continuous(labels = scales::dollar_format()) +
+  scale_color_viridis_c(option = "plasma", direction = -1) +
+  facet_wrap(~borough, ncol = 1) +
+  labs(
+    x = "Median household income",
+    y = "Largest group in Census tract",
+    title = "Race and Income Across Census Tracts in New York City"
+  ) +
+  theme_minimal()
+
+# Convert to interactive plotly plot
+ggplotly(p, tooltip = "text")
+```
